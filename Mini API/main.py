@@ -19,9 +19,7 @@ class UserResponse(BaseModel):
     user_id: uuid.UUID
     user_name: str
     
-    
 users = []
-
 
 @app.get("/")
 def say_hi():
@@ -38,7 +36,7 @@ def create_user(user: CreateUser):
 # Get all users
 @app.get("/users", response_model=list[UserResponse]) # Responds with an array of UserResponse Objects          
 def get_users():
-    return {'users': users}  
+    return users
 
 # Get a specific user 
 @app.get("/users/{user_id}", response_model=UserResponse)         
