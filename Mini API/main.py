@@ -1,14 +1,14 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Response
 from pydantic import BaseModel
 import uuid
 
 app = FastAPI()
 
-
+# Pydantic Models are like descriptions of how a message should look
 class CreateUser(BaseModel):    
     user_name: str                   # Models are like doorways, defning a shape data must follow to pass. 
     email: str                       # They defgine what the client may send, what we store, and what we send back.
-    age: int                         # For example: UserCreate is a model that defines what is send for user creation.
+    age: int                         # For example: CreateUser is a model that defines what is send for user creation.
 
 class User(CreateUser):              
     user_id: uuid.UUID                                   
@@ -16,11 +16,10 @@ class User(CreateUser):
 users = []
 
 # Create a user
-@app.post("/users")                  # When the client calls post it will send a user
-def create_user(user: CreateUser):   # User object parameter
+@app.post("/users", status_code=201) # When the client calls post it will send a user, Status Code returned for resource created
+def create_user(user: CreateUser):
     user_id = uuid.uuid4()           # Generate a user id
-    new_user = user.model_dump()     # Turn into a python dictionary 
-    new_user["user_id"] = user_id    
+    new_user = User(**user.model_dump(), user_id=user_id) # Unpacking works on Python dictionaries but not Pydantic Models 
     users.append(new_user) 
     return new_user                  # FastAPi automatically converts to JSON
 
@@ -33,18 +32,21 @@ def get_users():
 @app.get("/users/{user_id}")         
 def get_specific(user_id: uuid.UUID):
     for user in users:
-        if user["user_id"] == user_id: return user
-    return {"status": "not found"}
+        if user.user_id == user_id: return user
+    raise HTTPException(404, "User Not Found")
 
-@app.put("/users/")
-def update_user(user):
-    for server_user in users:
-        if server_user["user_id"] == user.user_id # Update some feature?
-    return {"status": "success"}
+@app.put("/users/{user_id}")
+def update_user(user_id: uuid.UUID, user: CreateUser):
+    for i, stored_user in enumerate(users):
+        if stored_user.user_id == user_id: 
+            users[i] = User(**user.model_dump(), user_id=user_id)
+            return {"status": "success"}
+    raise HTTPException(404, "User Not Found")
     
-@app.delete("/users/{user_id}")
-def delete_user(user_id):
+@app.delete("/users/{user_id}", status_code=204)
+def delete_user(user_id: uuid.UUID):
     for user in users:
-        if user["user_id"] == user_id: users.remove(user)
-    return {"status": "success"}
-
+        if  user.user_id == user_id: 
+            users.remove(user)
+            return Response(status_code=204)
+    raise HTTPException(404, "User Not Found")
