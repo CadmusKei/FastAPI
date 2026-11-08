@@ -4,18 +4,16 @@ It is super common knowledge that we use SQL with accesing and storing data in d
 
 ## SELECT
 
-> NOTE]
->
 > Here is a standard exmaple of `SELECT`  in SQL:
 >
 > ```sql
-> SELECT username, email
+>SELECT username, email
 > FROM users
 > WHERE age >= 21;
 > ```
->
+> 
 > - `SELECT` requests columns
-> - `FROM` requests the table
+>- `FROM` requests the table
 > - `WHERE` filters the records
 
 ## INSERT
